@@ -15,11 +15,11 @@ from app.services.vectorstore import add_chunks
 logger = logging.getLogger(__name__)
 
 
-def index_document(pdf_path: Path) -> str:
+def index_document(pdf_path: Path, version: int = 1, parent_id: str = "") -> str:
     """
     Full indexing pipeline for a single PDF:
     1. Create DB record (status=processing)
-    2. Extract text (native + OCR)
+    2. Extract text (native + OCR + LLM/VLM adaptive)
     3. Chunk the text
     4. Embed and store in vector DB
     5. Generate title & summary via LLM
@@ -31,7 +31,8 @@ def index_document(pdf_path: Path) -> str:
     filename = pdf_path.name
 
     # Step 1: Create initial record
-    insert_document(doc_id=doc_id, filename=filename, status="processing")
+    insert_document(doc_id=doc_id, filename=filename, status="processing",
+                    version=version, parent_id=parent_id)
     logger.info("Indexing %s as doc_id=%s", filename, doc_id)
 
     try:
@@ -61,17 +62,9 @@ def index_document(pdf_path: Path) -> str:
             title=title,
             summary=summary,
             chunk_count=len(chunks),
+            page_count=extraction.page_count,
             status="ready",
         )
-        # Also update page_count (was 0 at insert)
-        from app.models import get_db
-        conn = get_db()
-        conn.execute(
-            "UPDATE documents SET page_count = ? WHERE id = ?",
-            (extraction.page_count, doc_id),
-        )
-        conn.commit()
-        conn.close()
 
         logger.info("Successfully indexed %s: '%s'", filename, title)
 

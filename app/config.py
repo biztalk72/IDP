@@ -15,7 +15,13 @@ DB_DIR.mkdir(exist_ok=True)
 # Ollama
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen2.5:7b")
+VLM_MODEL = os.getenv("VLM_MODEL", "minicpm-v")
+OCR_LLM_MODEL = os.getenv("OCR_LLM_MODEL", "")  # defaults to LLM_MODEL if empty
 EMBED_MODEL = os.getenv("EMBED_MODEL", "mxbai-embed-large")
+
+# Extraction thresholds
+TEXT_DENSITY_THRESHOLD = int(os.getenv("TEXT_DENSITY_THRESHOLD", "30"))
+OCR_QUALITY_THRESHOLD = int(os.getenv("OCR_QUALITY_THRESHOLD", "50"))
 
 # Chunking
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1000"))
@@ -23,6 +29,7 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 
 # RAG
 TOP_K = int(os.getenv("TOP_K", "5"))
+CONVERSATION_HISTORY_LIMIT = int(os.getenv("CONVERSATION_HISTORY_LIMIT", "20"))
 
 # API
 UPLOAD_MAX_SIZE_MB = 50

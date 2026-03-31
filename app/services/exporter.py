@@ -1,7 +1,8 @@
-"""Export conversation Q&A as Markdown or PDF."""
+"""Export conversation Q&A as Markdown, PDF, Excel, or CSV."""
 
 from __future__ import annotations
 
+import csv
 import io
 import re
 from dataclasses import dataclass
@@ -113,4 +114,53 @@ def export_pdf(entries: list[QAEntry], title: str = "IDP Q&A Report") -> bytes:
 
     buf = io.BytesIO()
     pdf.output(buf)
+    return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Table extraction / Excel / CSV export
+# ---------------------------------------------------------------------------
+
+def extract_markdown_tables(text: str) -> list[list[list[str]]]:
+    """Extract markdown tables from text. Returns list of tables, each a list of rows."""
+    tables: list[list[list[str]]] = []
+    lines = text.split("\n")
+    current_table: list[list[str]] = []
+
+    for line in lines:
+        stripped = line.strip()
+        if "|" in stripped and stripped.startswith("|"):
+            # Skip separator rows like |---|---|---|
+            if re.match(r"^\|[\s\-:|]+\|$", stripped):
+                continue
+            cells = [c.strip() for c in stripped.split("|")[1:-1]]
+            if cells:
+                current_table.append(cells)
+        else:
+            if current_table:
+                tables.append(current_table)
+                current_table = []
+    if current_table:
+        tables.append(current_table)
+    return tables
+
+
+def table_to_csv(table: list[list[str]]) -> str:
+    """Convert a table (list of rows) to CSV string."""
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    for row in table:
+        writer.writerow(row)
+    return buf.getvalue()
+
+
+def table_to_excel(table: list[list[str]]) -> bytes:
+    """Convert a table (list of rows) to Excel bytes."""
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    for row in table:
+        ws.append(row)
+    buf = io.BytesIO()
+    wb.save(buf)
     return buf.getvalue()

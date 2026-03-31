@@ -23,6 +23,11 @@ aiosqlite==0.21.0
 
 # Export
 fpdf2==2.8.3
+openpyxl==3.1.5
+
+# Visualization
+plotly==6.0.1
+kaleido==0.2.1
 
 # Frontend
 streamlit==1.44.1
